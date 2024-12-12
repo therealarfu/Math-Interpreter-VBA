@@ -1,8 +1,8 @@
 # Math-Interpreter-VBA
 > Description
-This project is a VBA Math Interpreter, made without any external dependencies.
-It supports basic operations, floats, operation with brackets and unary expressions.
-(This is my first interpreter on VBA yay!)
+> This project is a VBA Math Interpreter, made without any external dependencies.
+> It supports basic operations, floats, operation with brackets and unary expressions.
+> (This is my first interpreter on VBA yay!)
 
 ## Documentation
 > Arithmetic Operators
