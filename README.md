@@ -4,7 +4,7 @@ This project is a VBA Math Interpreter, made without any external dependencies. 
 
 ## How to use
 First you have to download the module, and import it on PowerPoint or Excel. <br/>
-After that you should be able to use the function ``Evaluate`` to calculate.
+After that you should be able to use the function ``Evaluate`` to calculate an expression in a String.
 
 ```vb
 ' It returns the result in a string.
