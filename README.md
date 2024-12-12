@@ -15,6 +15,7 @@ This project is a VBA Math Interpreter, made without any external dependencies.
 | - | Subtraction | 1 |
 
 > Unary Operators
+
 | Examples | Name |
 | --- | --- |
 | ++ | Positive | 
