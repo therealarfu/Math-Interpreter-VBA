@@ -1,6 +1,7 @@
 # Math-Interpreter-VBA
 > Description
 This project is a VBA Math Interpreter, made without any external dependencies.
+It supports basic operations, floats, operation with brackets and unary expressions.
 (This is my first interpreter on VBA yay!)
 
 ## Documentation
@@ -14,7 +15,7 @@ This project is a VBA Math Interpreter, made without any external dependencies.
 | + | Sum | 1 |
 | - | Subtraction | 1 |
 
-> Unary Operators
+> Unary Expressions
 
 | Examples | Name |
 | --- | --- |
@@ -23,7 +24,3 @@ This project is a VBA Math Interpreter, made without any external dependencies.
 | +- | Negative | 
 | -+ | Negative | 
 | --- | Negative | 
-
-> Floats
-**2.** -> **2.0**
-**.6** -> **1.6**
