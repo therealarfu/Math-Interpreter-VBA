@@ -15,11 +15,13 @@ This project is a VBA Math Interpreter, made without any external dependencies.
 | - | Subtraction | 1 |
 
 > Unary Operators
-| ++ |
-| -- |
-| -+ | 
-| +- |
-
+| Examples | Name |
+| --- | --- |
+| ++ | Positive | 
+| -- | Positive | 
+| +- | Negative | 
+| -+ | Negative | 
+| --- | Negative | 
 
 > Floats
 **2.** -> **2.0**
