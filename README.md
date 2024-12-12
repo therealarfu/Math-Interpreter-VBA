@@ -22,3 +22,12 @@ This project is a VBA Math Interpreter, made without any external dependencies. 
 | +- | Negative | 
 | -+ | Negative | 
 | --- | Negative | 
+
+## How to use
+First you have to download the module, and import it on PowerPoint or Excel. <br/>
+After that you should be able to use the function ``Evaluate`` to calculate.
+
+```vb
+' It returns the result in a string.
+Eval.Evaluate(Expression)   
+```
