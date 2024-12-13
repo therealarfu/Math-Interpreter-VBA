@@ -1,6 +1,6 @@
 # Math-Interpreter-VBA
 ## Description
-This project is a VBA Math Interpreter, made without any external dependencies. <br/> It supports basic operations, floats numbers, negative numbers, operation with brackets and unary expressions. <br/> (This is my first interpreter on VBA yay!)
+This project is a VBA Math Interpreter, made without any external dependencies. <br/> It supports basic operations, float numbers, negative numbers, operation with brackets and unary expressions. <br/> (This is my first interpreter on VBA yay!)
 
 ## How to use
 First you have to download the module, and import it on PowerPoint or Excel. <br/>
