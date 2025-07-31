@@ -1,6 +1,8 @@
 # Math-Interpreter-VBA
 ## Description
-This project is a VBA Math Interpreter, made without any external dependencies. <br/> It supports basic operations, float numbers, negative numbers, operation with brackets and unary expressions. <br/> (This is my first interpreter on VBA yay!)
+A **fully functional mathematical expression interpreter** built entirely in **VBA (Visual Basic for Applications)**.  
+It parses and evaluates math expressions with **correct precedence**, **associativity**, and **unary operator support**,  
+making it ideal for **Excel macros**, **Office automation**, or just exploring compiler logic in VBA.
 
 ## How to use
 First you have to download the module, and import it on PowerPoint or Excel. <br/>
@@ -10,25 +12,16 @@ After that you should be able to use the function ``Evaluate`` to calculate an e
 ' It returns the result in a string.
 Eval.Evaluate(Expression)   
 ```
+## Features
 
-## Documentation
-> Arithmetic Operators
+✅ Built from scratch using the **Shunting Yard algorithm**  
+Parses infix expressions into postfix (RPN)  
+Evaluates expressions with:
 
-| Operator | Name | Priority |
-| --- | --- | --- |
-| ^ | Power | 3 |
-| * | Multiply | 2 |
-| / | Division | 2 |
-| + | Sum | 1 |
-| - | Subtraction | 1 |
-
-> Unary Expressions
-
-| Examples | Name |
-| --- | --- |
-| ++ | Positive | 
-| -- | Positive | 
-| +- | Negative | 
-| -+ | Negative | 
-| --- | Negative | 
+| Supported | Description                    |
+|-----------|--------------------------------|
+| `+ - * / ^` | Arithmetic operators           |
+| `()`       | Parentheses for grouping       |
+| `-x`, `+x` | Unary operators (e.g., `-5`)   |
+| `1.5`      | Decimal numbers                |
 
