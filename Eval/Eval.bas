@@ -1,242 +1,151 @@
 Attribute VB_Name = "Eval"
-' Math Interpreter 1.0
-' Module by Arfur (12/12/2024)
+' Math Interpreter 2.0
+' Shunting-Yard Math Algorithm
+' Module by Arfur (31/07/2025)
 ' Github: https://github.com/therealarfu
 
 Option Explicit
 
-Private Const MATH_CHARS As String = "0123456789+-/*^()."
+Private Const MATH_CHARS As String = "0123456789.+-*/^()"
 Private Const DIGITS As String = "0123456789"
-Private Const OPERATORS As String = "+-/*()^"
+Private Const OPERATORS As String = "+-*/^()"
 
-Private Sub AddItem(Arr As Variant, Item As Variant)
-    ReDim Preserve Arr(UBound(Arr) + 1)
-    Arr(UBound(Arr)) = Item
-End Sub
-
-Private Function IndexOf(List As Variant, Item As String) As Long
-    Dim i As Long
-    For i = 0 To UBound(List)
-        If List(i)(0) = Item Then
-            IndexOf = i
-            Exit Function
-        Else
-            IndexOf = -1
-        End If
-    Next
-End Function
- 
-Private Sub Pop(List As Variant, Optional ByVal Index As Long)
-    Dim i As Long
-    If IsMissing(Index) Or Index > UBound(List) Or UBound(List) = Index And UBound(List) = 1 Then
-        ReDim Preserve List(UBound(List) - 1)
-    ElseIf UBound(List) > Index Then
-        For i = Index To UBound(List)
-            If i <> UBound(List) Then
-                List(i) = List(i + 1)
-            End If
-        Next
-        ReDim Preserve List(UBound(List) - 1)
-    ElseIf UBound(List) >= Index And UBound(List) = 0 Then
-        ReDim List(UBound(List) - UBound(List))
-    Else
-        Exit Sub
-    End If
-End Sub
-
-Private Function FindBrackets(Arr As Variant) As Variant
-    Dim i As Long, lb As Long, rb As Long
-    
-    For i = UBound(Arr) To 0 Step -1
-        If Arr(i)(0) = ")" Then
-            rb = i
-        ElseIf Arr(i)(0) = "(" Then
-            lb = i
-            Exit For
-        End If
-    Next
-    If rb = lb Then
-        FindBrackets = Array(-1, -1)
-    Else
-        FindBrackets = Array(lb, rb)
-    End If
-End Function
-
-Private Function CheckString(ByVal Expr As String) As String
-    Dim newexpr As String, length As Long, i As Long
-    newexpr = Replace(Expr, " ", "")
+Private Function Lexer(ByVal expr As String) As String()
+    Dim newexpr As String, length As Long, i As Long, arr() As String, Char As String, tempnumber As String, ArrIndex As Long, lbar As Long, rbar As Long
+    newexpr = Replace(expr, " ", "")
     length = Len(newexpr)
+    ReDim arr(0 To length * 2) As String
+
+    If InStr(1, DIGITS & "(+-.", Left$(newexpr, 1)) = 0 Then RaiseError "Invalid start: """ & Left$(newexpr, 1) & """.", 1
+    If InStr(1, DIGITS & ").", right$(newexpr, 1)) = 0 Then RaiseError "Invalid end: """ & right$(newexpr, 1) & """.", length
 
     For i = 1 To length
-        If InStr(1, MATH_CHARS, Mid$(newexpr, i, 1)) = 0 Then RaiseError "Invalid character: """ & Mid$(newexpr, i, 1) & """.", i
-    Next
-    
-    If InStr(1, DIGITS & "(+-.", Left$(newexpr, 1)) = 0 Then RaiseError "Invalid start: """ & Left$(newexpr, 1) & """.", 1
-    If InStr(1, DIGITS & ").", Right$(newexpr, 1)) = 0 Then RaiseError "Invalid end: """ & Right$(newexpr, 1) & """.", length
-    If Len(Replace(newexpr, "(", "")) <> Len(Replace(newexpr, ")", "")) Then RaiseError "Invalid brackets."
-    
-    CheckString = newexpr
-End Function
-
-Private Function Tokenize(ByVal Expr As String) As Variant
-    Dim temparr() As Variant, char As String, i As Long, tempnumber As String, newexpr As String
-    newexpr = CheckString(Expr)
-    temparr = Array()
-    
-    For i = 1 To Len(newexpr)
-        char = Mid$(newexpr, i, 1)
-        If InStr(1, DIGITS & ".", char) Then
-            If char = "." And InStr(1, tempnumber, ".") <> 0 Then RaiseError "Float with multiple dots", i
-            tempnumber = tempnumber & char
+        Char = Mid$(newexpr, i, 1)
+        If InStr(1, MATH_CHARS, Char) = 0 Then RaiseError "Invalid character: """ & Char & """.", i
+        If ArrIndex > UBound(arr) Then ReDim Preserve arr(UBound(arr) * 2 + 1) As String
+        Select Case Char
+            Case "(": lbar = lbar + 1
+            Case ")": rbar = rbar + 1
+        End Select
+        
+        If IsNumeric(Char) Then
+            tempnumber = tempnumber & Char
+        ElseIf Char = "." Then
+            If InStr(1, tempnumber, ".") <> 0 Then RaiseError "Float with multiple dots", i
+            tempnumber = tempnumber & "."
         Else
             If tempnumber <> "" Then
-                If tempnumber = "." Then RaiseError "Invalid dot", i
-                If Left$(tempnumber, 1) = "." Then
-                    tempnumber = "0" & tempnumber
-                ElseIf Right$(tempnumber, 1) = "." Then
-                    tempnumber = Replace(tempnumber, ".", "")
-                End If
-                AddItem temparr, Array(tempnumber, "NUMBER")
+                arr(ArrIndex) = tempnumber
+                ArrIndex = ArrIndex + 1
                 tempnumber = ""
             End If
-            
-            ReDim Preserve temparr(UBound(temparr) + 1)
-            If InStr(1, "+-*/^", char) <> 0 Then
-                temparr(UBound(temparr)) = Array(char, "OPERATOR")
-            ElseIf char = "(" Then
-                temparr(UBound(temparr)) = Array(char, "LBRACKET")
-            Else
-                temparr(UBound(temparr)) = Array(char, "RBRACKET")
+            arr(ArrIndex) = Char
+            If ArrIndex = 0 Then
+                Select Case Char
+                    Case "-"
+                        Char = "~"
+                        arr(ArrIndex) = Char
+                    Case "+": ArrIndex = ArrIndex - 1
+                End Select
+            ElseIf InStr(1, "+-~*/^(", arr(ArrIndex - 1)) <> 0 Then
+                Select Case Char
+                    Case "-"
+                        Char = "~"
+                        arr(ArrIndex) = Char
+                    Case "+": ArrIndex = ArrIndex - 1
+                End Select
             End If
+            ArrIndex = ArrIndex + 1
         End If
     Next
+    
+    If lbar <> rbar Then RaiseError "Invalid brackets."
+    
     If tempnumber <> "" Then
-        If tempnumber = "." Then RaiseError "Invalid dot", i
-        If Left$(tempnumber, 1) = "." Then
-            tempnumber = "0" & tempnumber
-        ElseIf Right$(tempnumber, 1) = "." Then
-            tempnumber = Replace(tempnumber, ".", "")
-        End If
-        AddItem temparr, Array(tempnumber, "NUMBER")
-        tempnumber = ""
+        If ArrIndex > UBound(arr) Then ReDim Preserve arr(0 To ArrIndex)
+        arr(ArrIndex) = tempnumber
+        ArrIndex = ArrIndex + 1
     End If
-    
-    Tokenize = temparr
+
+    ReDim Preserve arr(0 To ArrIndex - 1)
+    Lexer = arr
 End Function
 
-Private Function CheckTokens(ByVal Expr As String) As Variant
-    Dim temparr() As Variant, i As Long, v0 As String, v1 As String
-    temparr = Tokenize(Expr)
-    
-    For i = 0 To UBound(temparr)
-        Select Case temparr(i)(1)
-            Case "NUMBER"
-                If i < UBound(temparr) Then
-                    v1 = temparr(i + 1)(1)
-                    If v1 <> "RBRACKET" And v1 <> "OPERATOR" Then RaiseError "Invalid number: """ & temparr(i)(0) & """.", i + 1
-                End If
-            Case "OPERATOR"
-                v0 = temparr(i + 1)(0)
-                v1 = temparr(i + 1)(1)
-                If v1 <> "NUMBER" And v1 <> "LBRACKET" And v0 <> "+" And v0 <> "-" Then RaiseError "Invalid operator: """ & temparr(i)(0) & """.", i + 1
-            Case "LBRACKET"
-                v0 = temparr(i + 1)(0)
-                v1 = temparr(i + 1)(1)
-                If v1 <> "NUMBER" And v1 <> "LBRACKET" And v0 <> "+" And v0 <> "-" Then RaiseError "Invalid left bracket.", i + 1
-            Case "RBRACKET"
-                If i < UBound(temparr) Then
-                    v1 = temparr(i + 1)(1)
-                    If v1 <> "RBRACKET" And v1 <> "OPERATOR" Then RaiseError "Invalid right bracket.", i + 1
-                End If
-        End Select
-    Next
-    
-    CheckTokens = temparr
+Private Function Precedence(ByVal Char As String) As Byte
+    Select Case Char
+        Case "+", "-": Precedence = 1
+        Case "*", "/": Precedence = 2
+        Case "^": Precedence = 3
+        Case "~": Precedence = 4
+    End Select
 End Function
 
+Private Function IsRightAssociative(ByVal Char As String) As Boolean
+    IsRightAssociative = (Char = "^" Or Char = "~")
+End Function
 
-Private Function Parser(ByVal Expr As String) As Variant
-    Dim temparr() As Variant, i As Long, temparr2() As Variant, signal As String
-    temparr = CheckTokens(Expr)
-    temparr2 = Array()
+Private Function Parser(expr() As String) As String()
+    Dim OperatorList() As String, Exitlist() As String, i As Long, OpIndex As Long, ExIndex As Long, Char As String, j As Long
     
-    For i = 0 To UBound(temparr)
-        If temparr(i)(0) = "-" Or temparr(i)(0) = "+" Then
-            If signal <> "" Then
-                If signal = temparr(i)(0) Then
-                    signal = "+"
-                Else
-                    signal = "-"
-                End If
-                If temparr(i + 1)(0) <> "-" And temparr(i + 1)(0) <> "+" Then
-                    AddItem temparr2, Array(signal, "OPERATOR")
-                    signal = ""
-                End If
-            ElseIf signal = "" And temparr(i + 1)(0) <> "-" And temparr(i + 1)(0) <> "+" Then
-                AddItem temparr2, temparr(i)
-            ElseIf signal = "" And (temparr(i + 1)(0) = "-" Or temparr(i + 1)(0) = "+") Then
-                signal = temparr(i)(0)
-            End If
+    ReDim OperatorList(0 To 8) As String
+    ReDim Exitlist(0 To 8) As String
+    
+    For i = 0 To UBound(expr)
+        Char = expr(i)
+        If OpIndex > UBound(OperatorList) Then ReDim Preserve OperatorList(UBound(OperatorList) * 2 + 1) As String
+        If ExIndex > UBound(Exitlist) Then ReDim Preserve Exitlist(UBound(Exitlist) * 2 + 1) As String
+        
+        If IsNumeric(Char) Then
+            Exitlist(ExIndex) = Char
+            ExIndex = ExIndex + 1
         Else
-            AddItem temparr2, temparr(i)
-        End If
-    Next
-    
-    Parser = NegativeNumbers(temparr2)
-End Function
-
-Private Function NegativeNumbers(temparr2 As Variant) As Variant
-    Dim temparr As Variant, i As Long, char As String, nextchar As String
-    temparr = Array()
-    
-    For i = 0 To UBound(temparr2)
-        If temparr2(i)(0) = "+" Or temparr2(i)(0) = "-" Then
-            If i = 0 Then
-            
-                If temparr2(1)(1) = "NUMBER" Then
-                    
-                    char = temparr2(0)(0)
-                    nextchar = temparr2(1)(0)
-                    
-                    If InStr(1, "+-", Left$(nextchar, 1)) = 0 Then
-                        temparr2(1)(0) = char & nextchar
-                    ElseIf Left$(nextchar, 1) <> char And InStr(1, "+-", nextchar, 1) Then
-                        temparr2(1)(0) = "-" & Right(nextchar, Len(nextchar) - 1)
-                    ElseIf Left$(nextchar, 1) = char Then
-                        temparr2(1)(0) = "+" & Right(nextchar, Len(nextchar) - 1)
-                    End If
-                    
-                Else
-                    AddItem temparr, temparr2(i)
-                End If
+            If OpIndex = 0 Or Char = "(" Then
+                OperatorList(OpIndex) = Char
+                OpIndex = OpIndex + 1
             Else
-                If (temparr2(i - 1)(1) = "OPERATOR" Or temparr2(i - 1)(1) = "LBRACKET") And temparr2(i + 1)(1) = "NUMBER" Then
-                    char = temparr2(i)(0)
-                    nextchar = temparr2(i + 1)(0)
-                    
-                    If InStr(1, "+-", Left$(nextchar, 1)) = 0 Then
-                        temparr2(i + 1)(0) = char & nextchar
-                    ElseIf Left$(nextchar, 1) <> char And InStr(1, "+-", Left$(nextchar, 1)) Then
-                        temparr2(i + 1)(0) = "-" & Right(temparr2(i + 1)(0), Len(temparr2(i + 1)(0)) - 1)
-                    ElseIf Left$(nextchar, 1) = char Then
-                        temparr2(i + 1)(0) = "+" & Right(nextchar, Len(nextchar) - 1)
-                    End If
-                    
+                If Char = ")" Then
+                    For j = OpIndex - 1 To 0 Step -1
+                        If OperatorList(j) = "(" Then
+                            OpIndex = OpIndex - 1
+                            Exit For
+                        End If
+                        Exitlist(ExIndex) = OperatorList(j)
+                        OpIndex = OpIndex - 1
+                        ExIndex = ExIndex + 1
+                    Next
+                ElseIf OperatorList(OpIndex - 1) = "(" Or Precedence(Char) > Precedence(OperatorList(OpIndex - 1)) Or (Precedence(Char) = Precedence(OperatorList(OpIndex - 1)) And IsRightAssociative(Char)) Then
+                    OperatorList(OpIndex) = Char
+                    OpIndex = OpIndex + 1
                 Else
-                    AddItem temparr, temparr2(i)
+                    Do While OpIndex > 0
+                        If OperatorList(OpIndex - 1) <> "(" And Precedence(Char) <= Precedence(OperatorList(OpIndex - 1)) And Not IsRightAssociative(Char) Then
+                            Exitlist(ExIndex) = OperatorList(OpIndex - 1)
+                            ExIndex = ExIndex + 1
+                            OpIndex = OpIndex - 1
+                        Else
+                            Exit Do
+                        End If
+                    Loop
+                    OperatorList(OpIndex) = Char
+                    OpIndex = OpIndex + 1
                 End If
             End If
-        Else
-            AddItem temparr, temparr2(i)
         End If
     Next
     
-    NegativeNumbers = temparr
+    For i = OpIndex - 1 To 0 Step -1
+        If ExIndex > UBound(Exitlist) Then ReDim Preserve Exitlist(UBound(Exitlist) * 2 + 1) As String
+        Exitlist(ExIndex) = OperatorList(i)
+        ExIndex = ExIndex + 1
+    Next
+    
+    ReDim Preserve Exitlist(0 To ExIndex - 1)
+    Parser = Exitlist
 End Function
 
-Private Function Calc(ByVal X As String, ByVal OPERATOR As String, ByVal y As String) As String
+Private Function Calc(ByVal x As String, ByVal OPERATOR As String, ByVal y As String) As String
     Dim num1 As Double, num2 As Double
-    num1 = CDbl(Replace(X, ".", ","))
+    num1 = CDbl(Replace(x, ".", ","))
     num2 = CDbl(Replace(y, ".", ","))
     
     Select Case OPERATOR
@@ -258,100 +167,34 @@ Private Function Calc(ByVal X As String, ByVal OPERATOR As String, ByVal y As St
     Calc = Replace(Calc, ",", ".")
 End Function
 
-Private Function CalcExpr(Arr As Variant) As Variant
-    Dim temparr As Variant, i As Long, OPERATORS As Long, pos1 As Long, pos2 As Long, op As Long, result As String
+Private Function Interpreter(expr() As String) As String
+    Dim ValueList() As String, i As Long, Char As String, ValueIndex As Long
     
-    For i = 0 To UBound(Arr)
-        If Arr(i)(1) = "OPERATOR" Then OPERATORS = OPERATORS + 1
-    Next
+    ReDim ValueList(0 To 8) As String
     
-    If OPERATORS = 0 Then
-        CalcExpr = Arr
-        Exit Function
-    End If
-    
-    For i = 0 To OPERATORS - 1
-    
-        pos1 = IndexOf(Arr, "^")
-        If pos1 <> -1 Then
-            op = pos1
+    For i = 0 To UBound(expr)
+        Char = expr(i)
+        If ValueIndex > UBound(ValueList) Then ReDim Preserve ValueList(UBound(ValueList) * 2 + 1) As String
+        
+        If IsNumeric(Char) Then
+            ValueList(ValueIndex) = Char
+            ValueIndex = ValueIndex + 1
         Else
-            pos1 = IndexOf(Arr, "*")
-            pos2 = IndexOf(Arr, "/")
-            If pos1 <> -1 Or pos2 <> -1 Then
-                If (pos1 < pos2 And pos1 <> -1) Or pos2 = -1 Then
-                    op = pos1
-                ElseIf (pos2 < pos1 And pos2 <> -1) Or pos1 = -1 Then
-                    op = pos2
-                End If
+            If Char = "~" Then
+                ValueList(ValueIndex - 1) = Calc(ValueList(ValueIndex - 1), "*", -1)
             Else
-                pos1 = IndexOf(Arr, "+")
-                pos2 = IndexOf(Arr, "-")
-                If (pos1 < pos2 And pos1 <> -1) Or pos2 = -1 Then
-                    op = pos1
-                ElseIf (pos2 < pos1 And pos2 <> -1) Or pos1 = -1 Then
-                    op = pos2
-                End If
+                ValueList(ValueIndex - 2) = Calc(ValueList(ValueIndex - 2), Char, ValueList(ValueIndex - 1))
+                ValueIndex = ValueIndex - 1
             End If
         End If
-        
-        result = Calc(Arr(op - 1)(0), Arr(op)(0), Arr(op + 1)(0))
-        Pop Arr, op
-        Pop Arr, op
-        Arr(op - 1)(0) = result
     Next
-    
-    If IsArray(Arr(0)) Then
-        CalcExpr = Arr(0)
-    Else
-        CalcExpr = Arr
-    End If
+    Interpreter = ValueList(0)
 End Function
 
-Private Function Interpreter(ByVal Expr As String) As Variant
-    Dim temparr As Variant, tempexpr As Variant, i As Long, j As Long, BCount As Long, lb As Long, rb As Long, result As Variant
-    temparr = Parser(Expr)
-    
-    For i = 0 To UBound(temparr)
-        If temparr(i)(0) = "(" Then BCount = BCount + 1
-    Next
-    
-    For i = 0 To BCount - 1
-        lb = FindBrackets(temparr)(0)
-        rb = FindBrackets(temparr)(1)
-        
-        tempexpr = Array()
-        For j = lb + 1 To rb - 1
-            AddItem tempexpr, temparr(j)
-        Next
-        result = CalcExpr(tempexpr)
-        For j = lb + 1 To rb
-            Pop temparr, lb + 1
-        Next
-        If IsArray(result(0)) Then
-            temparr(lb) = result(0)
-        Else
-            temparr(lb) = result
-        End If
-        temparr = NegativeNumbers(temparr)
-    Next
-    
-    result = CalcExpr(temparr)
-    If IsArray(result(0)) Then
-        result(0)(0) = Replace(result(0)(0), "+", "")
-        If Right$(result(0)(0), 1) = "0" Then result(0)(0) = Replace(result(0)(0), "-", "")
-        Interpreter = result(0)
-    Else
-        result(0) = Replace(result(0), "+", "")
-        If Right$(result(0), 1) = "0" Then result(0) = Replace(result(0), "-", "")
-        Interpreter = result
-    End If
+Public Function Evaluate(ByVal Expression As String) As String
+    Evaluate = Interpreter(Parser(Lexer(Expression)))
 End Function
 
-Public Function Evaluate(ByVal Expr As String) As String
-    Evaluate = Interpreter(Expr)(0)
-End Function
-    
 Private Function RaiseError(ByVal Message As String, Optional ByVal Index As Long = -1)
     If Index <> -1 Then
         Err.Raise vbObjectError, "Eval", "Error at index " & Index & ": " & Message
