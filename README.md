@@ -25,3 +25,7 @@ Evaluates expressions with:
 | `-x`, `+x` | Unary operators (e.g., `-5`)   |
 | `1.5`      | Decimal numbers                |
 
+> ⚠️ **Note**: Unlike the built-in `VBA.Evaluate`, this interpreter correctly handles the `^` operator as right-associative. For example:
+> 
+> - `2^2^2^2` is interpreted as `2^(2^(2^2))` → `65536`
+> - In contrast, `VBA.Evaluate("2^2^2^2")` incorrectly returns `256`, due to left-associative parsing.
