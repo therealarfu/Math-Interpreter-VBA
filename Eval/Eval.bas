@@ -1,5 +1,5 @@
 Attribute VB_Name = "Eval"
-' Math Interpreter 2.0
+' Math Interpreter 2.1
 ' Shunting-Yard Math Algorithm
 ' Module by Arfur (31/07/2025)
 ' Github: https://github.com/therealarfu
@@ -22,7 +22,7 @@ Private Function Lexer(ByVal expr As String) As String()
     For i = 1 To length
         Char = Mid$(newexpr, i, 1)
         If InStr(1, MATH_CHARS, Char) = 0 Then RaiseError "Invalid character: """ & Char & """.", i
-        If ArrIndex > UBound(arr) Then ReDim Preserve arr(UBound(arr) * 2 + 1) As String
+        If ArrIndex > UBound(arr) Then ReDim Preserve arr(UBound(arr) * 2) As String
         Select Case Char
             Case "(": lbar = lbar + 1
             Case ")": rbar = rbar + 1
@@ -87,13 +87,13 @@ End Function
 Private Function Parser(expr() As String) As String()
     Dim OperatorList() As String, Exitlist() As String, i As Long, OpIndex As Long, ExIndex As Long, Char As String, j As Long
     
-    ReDim OperatorList(0 To 8) As String
-    ReDim Exitlist(0 To 8) As String
+    ReDim OperatorList(0 To UBound(expr) * 2) As String
+    ReDim Exitlist(0 To UBound(expr) * 2) As String
     
     For i = 0 To UBound(expr)
         Char = expr(i)
-        If OpIndex > UBound(OperatorList) Then ReDim Preserve OperatorList(UBound(OperatorList) * 2 + 1) As String
-        If ExIndex > UBound(Exitlist) Then ReDim Preserve Exitlist(UBound(Exitlist) * 2 + 1) As String
+        If OpIndex > UBound(OperatorList) Then ReDim Preserve OperatorList(UBound(OperatorList) * 2) As String
+        If ExIndex > UBound(Exitlist) Then ReDim Preserve Exitlist(UBound(Exitlist) * 2) As String
         
         If IsNumeric(Char) Then
             Exitlist(ExIndex) = Char
@@ -118,6 +118,7 @@ Private Function Parser(expr() As String) As String()
                     OpIndex = OpIndex + 1
                 Else
                     Do While OpIndex > 0
+                        If ExIndex > UBound(Exitlist) Then ReDim Preserve Exitlist(UBound(Exitlist) * 2) As String
                         If OperatorList(OpIndex - 1) <> "(" And Precedence(Char) <= Precedence(OperatorList(OpIndex - 1)) And Not IsRightAssociative(Char) Then
                             Exitlist(ExIndex) = OperatorList(OpIndex - 1)
                             ExIndex = ExIndex + 1
@@ -134,7 +135,7 @@ Private Function Parser(expr() As String) As String()
     Next
     
     For i = OpIndex - 1 To 0 Step -1
-        If ExIndex > UBound(Exitlist) Then ReDim Preserve Exitlist(UBound(Exitlist) * 2 + 1) As String
+        If ExIndex > UBound(Exitlist) Then ReDim Preserve Exitlist(UBound(Exitlist) * 2) As String
         Exitlist(ExIndex) = OperatorList(i)
         ExIndex = ExIndex + 1
     Next
@@ -170,11 +171,11 @@ End Function
 Private Function Interpreter(expr() As String) As String
     Dim ValueList() As String, i As Long, Char As String, ValueIndex As Long
     
-    ReDim ValueList(0 To 8) As String
+    ReDim ValueList(0 To UBound(expr) * 2) As String
     
     For i = 0 To UBound(expr)
         Char = expr(i)
-        If ValueIndex > UBound(ValueList) Then ReDim Preserve ValueList(UBound(ValueList) * 2 + 1) As String
+        If ValueIndex > UBound(ValueList) Then ReDim Preserve ValueList(UBound(ValueList) * 2) As String
         
         If IsNumeric(Char) Then
             ValueList(ValueIndex) = Char
