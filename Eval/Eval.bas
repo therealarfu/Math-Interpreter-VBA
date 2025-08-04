@@ -1,5 +1,4 @@
-Attribute VB_Name = "Eval"
-' Math Interpreter 2.1
+' Math Interpreter 2.2
 ' Shunting-Yard Math Algorithm
 ' Module by Arfur (31/07/2025)
 ' Github: https://github.com/therealarfu
@@ -54,6 +53,7 @@ Private Function Lexer(ByVal expr As String) As String()
                         arr(ArrIndex) = Char
                     Case "+": ArrIndex = ArrIndex - 1
                 End Select
+                If arr(ArrIndex - 1) = "~" And Char = "~" Then ArrIndex = ArrIndex - 2
             End If
             ArrIndex = ArrIndex + 1
         End If
@@ -203,3 +203,4 @@ Private Function RaiseError(ByVal Message As String, Optional ByVal Index As Lon
         Err.Raise vbObjectError, "Eval", Message
     End If
 End Function
+
