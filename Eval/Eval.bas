@@ -51,9 +51,9 @@ Private Function Lexer(ByVal expr As String) As String()
                     Case "-"
                         Char = "~"
                         arr(ArrIndex) = Char
+                        If arr(ArrIndex - 1) = "~" And Char = "~" Then ArrIndex = ArrIndex - 2
                     Case "+": ArrIndex = ArrIndex - 1
                 End Select
-                If arr(ArrIndex - 1) = "~" And Char = "~" Then ArrIndex = ArrIndex - 2
             End If
             ArrIndex = ArrIndex + 1
         End If
@@ -203,4 +203,3 @@ Private Function RaiseError(ByVal Message As String, Optional ByVal Index As Lon
         Err.Raise vbObjectError, "Eval", Message
     End If
 End Function
-
