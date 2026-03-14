@@ -1,4 +1,4 @@
-' Math Interpreter 2.2
+' Math Interpreter 2.2.1
 ' Shunting-Yard Math Algorithm
 ' Module by Arfur (31/07/2025)
 ' Github: https://github.com/therealarfu
