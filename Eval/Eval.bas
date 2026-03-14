@@ -192,8 +192,8 @@ Private Function Interpreter(expr() As String) As String
     Interpreter = ValueList(0)
 End Function
 
-Public Function Evaluate(ByVal Expression As String) As String
-    Evaluate = Interpreter(Parser(Lexer(Expression)))
+Public Function Evaluate(ByVal Expression As String) As Double
+    Evaluate = CDbl(Replace(Interpreter(Parser(Lexer(Expression))), ".", ","))
 End Function
 
 Private Function RaiseError(ByVal Message As String, Optional ByVal Index As Long = -1)
